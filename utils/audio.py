@@ -1,6 +1,6 @@
 import speech_recognition as sr
 from gtts import gTTS
-import playsound
+import pygame
 import os
 import time
 import logging
@@ -13,6 +13,7 @@ class AudioHelper:
     def __init__(self):
         self.recognizer = sr.Recognizer()
         self.mic = sr.Microphone()
+        pygame.mixer.init()  # Initialize pygame mixer
         
         # Adjust for ambient noise
         with self.mic as source:
@@ -43,7 +44,7 @@ class AudioHelper:
 
     def speak_text(self, text):
         """
-        Convert text to speech and play it
+        Convert text to speech and play it using pygame
         """
         logger.info(f"Converting to speech: {text}")
         try:
@@ -53,9 +54,15 @@ class AudioHelper:
             tts.save(temp_file)
             
             logger.info("Playing audio...")
-            playsound.playsound(temp_file)
+            pygame.mixer.music.load(temp_file)
+            pygame.mixer.music.play()
+            
+            # Wait for audio to finish playing
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
             
             # Clean up
+            pygame.mixer.music.unload()
             os.remove(temp_file)
             logger.info("Audio playback complete")
         except Exception as e:
